@@ -1,0 +1,173 @@
+spring:
+  application:
+    name: Food Delivery System
+  
+  # Active Profile (dev or prod)
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+  
+  # Database Configuration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/food_delivery_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+  
+  # Email Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  
+  # File Upload Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:5MB}
+      max-request-size: ${MAX_REQUEST_SIZE:10MB}
+  
+  # Cache Configuration
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-minimum-256-bits}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
+
+# File Storage Configuration
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+  max-size: ${FILE_MAX_SIZE:5242880} # 5MB in bytes
+
+# Rate Limiting Configuration
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  login:
+    capacity: ${LOGIN_RATE_LIMIT:5}
+    refill-tokens: ${LOGIN_REFILL_TOKENS:5}
+    refill-duration: ${LOGIN_REFILL_DURATION:1} # minutes
+  order:
+    capacity: ${ORDER_RATE_LIMIT:10}
+    refill-tokens: ${ORDER_REFILL_TOKENS:10}
+    refill-duration: ${ORDER_REFILL_DURATION:1} # minutes
+  general:
+    capacity: ${GENERAL_RATE_LIMIT:100}
+    refill-tokens: ${GENERAL_REFILL_TOKENS:100}
+    refill-duration: ${GENERAL_REFILL_DURATION:1} # minutes
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# Logging Configuration
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.backend.fooddelivery: ${APP_LOG_LEVEL:DEBUG}
+    org.springframework.web: ${WEB_LOG_LEVEL:DEBUG}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:DEBUG}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${SQL_PARAM_LOG_LEVEL:TRACE}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Application-specific Configuration
+app:
+  name: Food Delivery System
+  version: 1.0.0
+  description: Production-grade Food Delivery System Backend
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.backend.fooddelivery: DEBUG
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    root: WARN
+    com.backend.fooddelivery: INFO
+  file:
+    name: logs/food-delivery-system.log
