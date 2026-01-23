@@ -25,6 +25,10 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+effective-pom.xml
+
+# Spring Boot
+HELP.md
 
 # Gradle
 .gradle
