@@ -2,9 +2,10 @@ package com.backend.fooddelivery.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -17,6 +18,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -27,8 +30,8 @@ public class JwtTokenProvider {
      * Generate JWT token from authentication
      */
     public String generateToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return generateTokenFromUsername(userDetails.getUsername());
+        String username = authentication.getName();
+        return generateTokenFromUsername(username);
     }
 
     /**
@@ -39,10 +42,10 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -50,11 +53,11 @@ public class JwtTokenProvider {
      * Get username from JWT token
      */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
         return claims.getSubject();
     }
@@ -62,21 +65,15 @@ public class JwtTokenProvider {
     /**
      * Validate JWT token
      */
-    public boolean validateToken(String token) {
+    public boolean validateToken(String authToken) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(authToken);
             return true;
-        } catch (MalformedJwtException ex) {
-            System.err.println("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            System.err.println("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            System.err.println("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            System.err.println("JWT claims string is empty");
+        } catch (Exception ex) {
+            logger.error("Invalid JWT token: {}", ex.getMessage());
         }
         return false;
     }
