@@ -26,6 +26,7 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 effective-pom.xml
+effective-pom
 
 # Spring Boot
 HELP.md
