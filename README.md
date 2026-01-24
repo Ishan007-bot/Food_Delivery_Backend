@@ -667,7 +667,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- **Developer Name** - [GitHub](https://github.com/your-username)
+- **Ishan Ganguly 24BCS10330** - [GitHub](https://github.com/Ishan007-bot)
 
 ---
 
@@ -696,4 +696,3 @@ For support, email support@fooddelivery.com or open an issue in the repository.
 
 ---
 
-**Built with ❤️ using Spring Boot**
