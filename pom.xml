@@ -94,7 +94,15 @@
 			<version>2.15.1</version>
 		</dependency>
 
-		<!-- Lombok -->
+        <!-- Rate Limiting -->
+        <dependency>
+            <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+            <artifactId>bucket4j-spring-boot-starter</artifactId>
+            <version>0.13.0</version>
+        </dependency>
+
+
+        <!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
