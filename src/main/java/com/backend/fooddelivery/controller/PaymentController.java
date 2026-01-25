@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * Payment Controller - Handles payment operations
  */
@@ -56,6 +58,33 @@ public class PaymentController {
             @PathVariable Long id,
             @RequestParam String status) {
         Payment payment = paymentService.updatePaymentStatus(id, status);
+        return ResponseEntity.ok(payment);
+    }
+
+    /**
+     * Create Razorpay order
+     */
+    @PostMapping("/razorpay/order/{orderId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "Create Razorpay order", description = "Create a payment order in Razorpay")
+    public ResponseEntity<Map<String, Object>> createRazorpayOrder(@PathVariable Long orderId) {
+        Map<String, Object> order = paymentService.createRazorpayOrder(orderId);
+        return ResponseEntity.ok(order);
+    }
+
+    /**
+     * Verify Razorpay payment
+     */
+    @PostMapping("/razorpay/verify/{paymentId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "Verify Razorpay payment", description = "Verify and capture Razorpay payment")
+    public ResponseEntity<Payment> verifyRazorpayPayment(
+            @PathVariable Long paymentId,
+            @RequestParam String razorpayOrderId,
+            @RequestParam String razorpayPaymentId,
+            @RequestParam String razorpaySignature) {
+        Payment payment = paymentService.verifyRazorpayPayment(
+                paymentId, razorpayOrderId, razorpayPaymentId, razorpaySignature);
         return ResponseEntity.ok(payment);
     }
 }

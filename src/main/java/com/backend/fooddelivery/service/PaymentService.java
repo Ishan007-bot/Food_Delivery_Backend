@@ -11,8 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 /**
- * Payment Service - Handles payment processing
+ * Payment Service - Handles payment processing with Razorpay integration
  */
 @Service
 public class PaymentService {
@@ -22,6 +24,9 @@ public class PaymentService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private RazorpayService razorpayService;
 
     /**
      * Process payment for order
@@ -47,13 +52,22 @@ public class PaymentService {
         payment.setOrderId(order.getId());
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentMethod(method);
-        payment.setTransactionId(request.getTransactionId());
-
-        // For COD, mark as pending; for online, mark as completed
-        if (method == Payment.PaymentMethod.CASH_ON_DELIVERY) {
-            payment.setStatus(Payment.PaymentStatus.PENDING);
+        
+        // For online payments, integrate with Razorpay
+        if (method != Payment.PaymentMethod.CASH_ON_DELIVERY && request.getTransactionId() == null) {
+            // Create Razorpay order
+            Map<String, Object> razorpayOrder = razorpayService.createPaymentOrder(order.getTotalAmount(), "INR");
+            payment.setTransactionId((String) razorpayOrder.get("id"));
+            payment.setPaymentDetails("Razorpay Order: " + razorpayOrder.get("id"));
+            payment.setStatus(Payment.PaymentStatus.PENDING); // Will be updated after verification
         } else {
-            payment.setStatus(Payment.PaymentStatus.COMPLETED);
+            payment.setTransactionId(request.getTransactionId());
+            // For COD, mark as pending; for pre-verified online payments, mark as completed
+            if (method == Payment.PaymentMethod.CASH_ON_DELIVERY) {
+                payment.setStatus(Payment.PaymentStatus.PENDING);
+            } else {
+                payment.setStatus(Payment.PaymentStatus.COMPLETED);
+            }
         }
 
         return paymentRepository.save(payment);
@@ -84,5 +98,43 @@ public class PaymentService {
 
         payment.setStatus(newStatus);
         return paymentRepository.save(payment);
+    }
+
+    /**
+     * Verify Razorpay payment
+     */
+    @Transactional
+    public Payment verifyRazorpayPayment(Long paymentId, String razorpayOrderId, 
+                                         String razorpayPaymentId, String razorpaySignature) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        // Verify payment signature with Razorpay
+        boolean isValid = razorpayService.verifyPaymentSignature(
+                razorpayOrderId, razorpayPaymentId, razorpaySignature);
+
+        if (!isValid) {
+            throw new BadRequestException("Invalid payment signature");
+        }
+
+        // Capture payment
+        Map<String, Object> captureDetails = razorpayService.capturePayment(
+                razorpayPaymentId, payment.getAmount());
+
+        payment.setStatus(Payment.PaymentStatus.COMPLETED);
+        payment.setTransactionId(razorpayPaymentId);
+        payment.setPaymentDetails("Razorpay Payment Verified: " + captureDetails.get("id"));
+
+        return paymentRepository.save(payment);
+    }
+
+    /**
+     * Create Razorpay order for payment
+     */
+    public Map<String, Object> createRazorpayOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        return razorpayService.createPaymentOrder(order.getTotalAmount(), "INR");
     }
 }
