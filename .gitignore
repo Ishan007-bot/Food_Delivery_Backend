@@ -122,4 +122,4 @@ secrets/
 *.pem
 *.key
 *.crt
-frontend/
+
