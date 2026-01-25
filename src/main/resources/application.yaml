@@ -78,6 +78,12 @@ rate-limit:
     refill-tokens: ${GENERAL_REFILL_TOKENS:100}
     refill-duration: ${GENERAL_REFILL_DURATION:1} # minutes
 
+# Razorpay Configuration
+razorpay:
+  key:
+    id: ${RAZORPAY_KEY_ID:rzp_test_mock_key}
+    secret: ${RAZORPAY_KEY_SECRET:rzp_test_mock_secret}
+
 # Swagger/OpenAPI Configuration
 springdoc:
   api-docs:

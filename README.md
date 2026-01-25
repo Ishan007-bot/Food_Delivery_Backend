@@ -31,7 +31,7 @@ A production-grade RESTful API backend for a comprehensive food delivery platfor
 - **🏪 Restaurant Management**: Full restaurant lifecycle with location-based search using Haversine formula
 - **🍕 Menu & Food Items**: Comprehensive menu management with categories and dietary tags
 - **📦 Order Management**: End-to-end order processing with real-time status tracking
-- **💳 Payment Integration**: Secure payment processing with multiple payment methods
+- **💳 Payment Integration**: Secure payment processing with Razorpay integration (mock)
 - **🚚 Delivery Tracking**: Real-time delivery assignment and status updates
 - **⭐ Reviews & Ratings**: Customer feedback system with rating aggregation
 - **📧 Email Notifications**: Automated order confirmations and status updates
@@ -40,11 +40,17 @@ A production-grade RESTful API backend for a comprehensive food delivery platfor
 ### Advanced Features
 - **🗺️ Location-Based Search**: Find restaurants within radius using Haversine formula
 - **⚡ Caching**: High-performance caching with Caffeine for frequently accessed data
-- **🛡️ Rate Limiting**: API rate limiting for enhanced security and stability
+- **🛡️ Rate Limiting**: API rate limiting with Bucket4j for enhanced security and stability
 - **📝 Input Validation**: Comprehensive request validation with Jakarta Validation
 - **🔄 Soft Delete**: Data integrity with soft delete mechanism
 - **📄 API Documentation**: Interactive Swagger/OpenAPI documentation
 - **🎯 Global Exception Handling**: Centralized error handling with meaningful responses
+
+### Frontend (Bonus)
+- **⚛️ React Frontend**: Modern React 19 + TypeScript + Vite frontend application
+- **🎨 Modern UI**: Clean, responsive design with intuitive user experience
+- **🛒 Shopping Cart**: Full cart functionality with quantity management
+- **📱 Responsive Design**: Mobile-friendly interface
 
 ---
 
@@ -115,9 +121,10 @@ com.backend.fooddelivery
 - **Java 21** or higher
 - **Maven 3.6+**
 - **PostgreSQL 12+**
+- **Node.js 18+** (for frontend)
 - **Git**
 
-### Installation
+### Backend Installation
 
 1. **Clone the repository**
 ```bash
@@ -134,7 +141,7 @@ CREATE DATABASE food_delivery_db;
 
 3. **Configure Environment Variables**
 
-Copy `.env.example` to `.env` and update:
+Update `src/main/resources/application.yaml` or set environment variables:
 ```properties
 # Database
 DB_URL=jdbc:postgresql://localhost:5432/food_delivery_db
@@ -162,7 +169,36 @@ MAIL_PASSWORD=your-app-password
 ./mvnw spring-boot:run
 ```
 
-The application will start on `http://localhost:8080`
+The backend will start on `http://localhost:8080`
+
+### Frontend Installation
+
+1. **Navigate to frontend directory**
+```bash
+cd frontend
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Create environment file**
+```bash
+cp .env.example .env
+```
+
+4. **Update `.env` file** (if backend URL is different)
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+5. **Start development server**
+```bash
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173`
 
 ---
 
