@@ -35,13 +35,10 @@ export function DashboardHeader() {
     navigate('/');
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const getInitials = (firstName?: string, lastName?: string) => {
+    const first = firstName?.[0] || '';
+    const last = lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'U';
   };
 
   return (
@@ -86,11 +83,11 @@ export function DashboardHeader() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.avatar} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {user?.name ? getInitials(user.name) : 'U'}
+                    {getInitials(user?.firstName, user?.lastName)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium">{user?.name}</span>
+                  <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
                   <span className="text-xs text-muted-foreground capitalize">{user?.role}</span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground hidden md:block" />
@@ -99,7 +96,7 @@ export function DashboardHeader() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span>{user?.name}</span>
+                  <span>{user?.firstName} {user?.lastName}</span>
                   <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
                 </div>
               </DropdownMenuLabel>

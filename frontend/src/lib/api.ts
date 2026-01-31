@@ -72,7 +72,7 @@ export const restaurantApi = {
 // Menu Items API
 export const menuItemApi = {
   getByRestaurant: async (restaurantId: number) => {
-    const response = await api.get(`/menu-items/restaurant/${restaurantId}`);
+    const response = await api.get(`/restaurants/${restaurantId}/menu`);
     return response.data;
   },
 };
@@ -84,8 +84,13 @@ export const orderApi = {
     return response.data;
   },
 
-  getByCustomer: async (customerId: number) => {
-    const response = await api.get(`/orders/customer/${customerId}`);
+  getMyOrders: async () => {
+    const response = await api.get('/orders/my-orders');
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/orders/${id}`);
     return response.data;
   },
 };

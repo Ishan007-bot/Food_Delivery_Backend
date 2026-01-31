@@ -13,11 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 import { UtensilsCrossed, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const registerSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email'),
-  phone: z.string().min(10, 'Phone number must be at least 10 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50, 'First name must not exceed 50 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name must not exceed 50 characters'),
+  email: z.string().email('Please enter a valid email').max(100, 'Email must not exceed 100 characters'),
+  phone: z.string().regex(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must not exceed 100 characters')
+    .regex(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$/,
+      'Password must contain at least one digit, one lowercase, one uppercase, and one special character (@#$%^&+=)'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -137,7 +141,8 @@ export default function Register() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+1234567890"
+                  placeholder="1234567890"
+                  maxLength={10}
                   {...register('phone')}
                   className={errors.phone ? 'border-destructive' : ''}
                 />

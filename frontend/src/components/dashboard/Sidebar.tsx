@@ -1,16 +1,17 @@
 import { useLocation, Link } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Upload, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Upload,
+  BarChart3,
   Settings,
   Mail,
   Globe,
   Shield,
   Zap,
-  ChevronDown
+  ChevronDown,
+  UtensilsCrossed
 } from 'lucide-react';
 import {
   Sidebar,
