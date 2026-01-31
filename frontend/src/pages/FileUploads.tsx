@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { 
@@ -46,14 +46,31 @@ const getFileIcon = (type: string) => {
 export default function FileUploads() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
+  const intervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
 
-  const simulateUpload = (file: UploadedFile) => {
+  // Cleanup intervals and Object URLs on unmount
+  useEffect(() => {
+    const intervals = intervalsRef.current;
+    return () => {
+      intervals.forEach((interval) => clearInterval(interval));
+      intervals.clear();
+      // Revoke all Object URLs
+      files.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [files]);
+
+  const simulateUpload = useCallback((file: UploadedFile) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 20;
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
+        intervalsRef.current.delete(file.id);
         setFiles((prev) =>
           prev.map((f) =>
             f.id === file.id ? { ...f, progress: 100, status: 'completed' } : f
@@ -71,7 +88,8 @@ export default function FileUploads() {
         );
       }
     }, 200);
-  };
+    intervalsRef.current.set(file.id, interval);
+  }, [toast]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
@@ -86,7 +104,7 @@ export default function FileUploads() {
 
     setFiles((prev) => [...newFiles, ...prev]);
     newFiles.forEach(simulateUpload);
-  }, []);
+  }, [simulateUpload]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -99,9 +117,23 @@ export default function FileUploads() {
     maxSize: 10 * 1024 * 1024, // 10MB
   });
 
-  const removeFile = (id: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
-  };
+  const removeFile = useCallback((id: string) => {
+    // Clear any running upload interval
+    const interval = intervalsRef.current.get(id);
+    if (interval) {
+      clearInterval(interval);
+      intervalsRef.current.delete(id);
+    }
+
+    // Revoke Object URL to prevent memory leak
+    setFiles((prev) => {
+      const fileToRemove = prev.find((f) => f.id === id);
+      if (fileToRemove?.preview) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+      return prev.filter((f) => f.id !== id);
+    });
+  }, []);
 
   return (
     <DashboardLayout>
