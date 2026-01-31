@@ -1,15 +1,16 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { 
-  Upload, 
-  File, 
-  Image, 
-  FileText, 
-  X, 
+import {
+  Upload,
+  File,
+  Image,
+  FileText,
+  X,
   Check,
   Loader2,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { fileApi } from '@/lib/api';
 
 interface UploadedFile {
   id: string;
@@ -27,6 +29,8 @@ interface UploadedFile {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   preview?: string;
+  errorMessage?: string;
+  fileUrl?: string;
 }
 
 const formatFileSize = (bytes: number) => {
@@ -46,14 +50,14 @@ const getFileIcon = (type: string) => {
 export default function FileUploads() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
-  const intervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 
-  // Cleanup intervals and Object URLs on unmount
+  // Cleanup Object URLs on unmount
   useEffect(() => {
-    const intervals = intervalsRef.current;
     return () => {
-      intervals.forEach((interval) => clearInterval(interval));
-      intervals.clear();
+      // Abort any ongoing uploads
+      abortControllersRef.current.forEach((controller) => controller.abort());
+      abortControllersRef.current.clear();
       // Revoke all Object URLs
       files.forEach((file) => {
         if (file.preview) {
@@ -63,66 +67,77 @@ export default function FileUploads() {
     };
   }, [files]);
 
-  const simulateUpload = useCallback((file: UploadedFile) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        intervalsRef.current.delete(file.id);
+  const uploadFile = useCallback(async (file: File, uploadedFile: UploadedFile) => {
+    try {
+      const response = await fileApi.upload(file, 'general', (progress) => {
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === file.id ? { ...f, progress: 100, status: 'completed' } : f
+            f.id === uploadedFile.id ? { ...f, progress } : f
           )
         );
-        toast({
-          title: 'File uploaded',
-          description: `${file.name} has been uploaded successfully.`,
-        });
-      } else {
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === file.id ? { ...f, progress: Math.round(progress) } : f
-          )
-        );
-      }
-    }, 200);
-    intervalsRef.current.set(file.id, interval);
+      });
+
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === uploadedFile.id
+            ? { ...f, progress: 100, status: 'completed', fileUrl: response.fileUrl }
+            : f
+        )
+      );
+
+      toast({
+        title: 'File uploaded',
+        description: `${uploadedFile.name} has been uploaded successfully.`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Upload failed';
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === uploadedFile.id
+            ? { ...f, status: 'error', errorMessage }
+            : f
+        )
+      );
+
+      toast({
+        title: 'Upload failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
   }, [toast]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
-      id: Date.now().toString() + Math.random().toString(36).substring(7),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 0,
-      status: 'uploading' as const,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
-    }));
+    acceptedFiles.forEach((file) => {
+      const uploadedFile: UploadedFile = {
+        id: Date.now().toString() + Math.random().toString(36).substring(7),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        progress: 0,
+        status: 'uploading',
+        preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+      };
 
-    setFiles((prev) => [...newFiles, ...prev]);
-    newFiles.forEach(simulateUpload);
-  }, [simulateUpload]);
+      setFiles((prev) => [uploadedFile, ...prev]);
+      uploadFile(file, uploadedFile);
+    });
+  }, [uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
-      'application/pdf': ['.pdf'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
   });
 
   const removeFile = useCallback((id: string) => {
-    // Clear any running upload interval
-    const interval = intervalsRef.current.get(id);
-    if (interval) {
-      clearInterval(interval);
-      intervalsRef.current.delete(id);
+    // Abort any running upload
+    const controller = abortControllersRef.current.get(id);
+    if (controller) {
+      controller.abort();
+      abortControllersRef.current.delete(id);
     }
 
     // Revoke Object URL to prevent memory leak
@@ -154,7 +169,7 @@ export default function FileUploads() {
           <CardHeader>
             <CardTitle>Upload Files</CardTitle>
             <CardDescription>
-              Drag & drop files here or click to browse. Max file size: 10MB
+              Drag & drop image files here or click to browse. Max file size: 10MB
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -189,8 +204,8 @@ export default function FileUploads() {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Badge variant="ghost">PNG</Badge>
                   <Badge variant="ghost">JPG</Badge>
-                  <Badge variant="ghost">PDF</Badge>
-                  <Badge variant="ghost">DOC</Badge>
+                  <Badge variant="ghost">GIF</Badge>
+                  <Badge variant="ghost">WEBP</Badge>
                 </div>
               </div>
             </div>
@@ -236,6 +251,9 @@ export default function FileUploads() {
                         {file.status === 'uploading' && (
                           <Progress value={file.progress} className="h-1 mt-2" />
                         )}
+                        {file.status === 'error' && file.errorMessage && (
+                          <p className="text-sm text-destructive mt-1">{file.errorMessage}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -251,8 +269,18 @@ export default function FileUploads() {
                             Uploaded
                           </Badge>
                         )}
-                        {file.status === 'completed' && (
-                          <Button variant="ghost" size="icon">
+                        {file.status === 'error' && (
+                          <Badge variant="destructive" className="gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Failed
+                          </Badge>
+                        )}
+                        {file.status === 'completed' && file.fileUrl && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.open(file.fileUrl, '_blank')}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                         )}

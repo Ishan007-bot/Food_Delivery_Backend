@@ -9,12 +9,16 @@ export const api = axios.create({
   },
 });
 
-// Add token to requests
+// Add token to requests and handle FormData
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Remove Content-Type for FormData to let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
@@ -117,6 +121,31 @@ export const userApi = {
 
   getById: async (id: number) => {
     const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+};
+
+// File Upload API
+export const fileApi = {
+  upload: async (file: File, folder: string = 'general', onProgress?: (progress: number) => void) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    // Don't set Content-Type header - let axios set it automatically with boundary
+    const response = await api.post('/files/upload', formData, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(progress);
+        }
+      },
+    });
+    return response.data;
+  },
+
+  delete: async (folder: string, filename: string) => {
+    const response = await api.delete(`/files/${folder}/${filename}`);
     return response.data;
   },
 };
