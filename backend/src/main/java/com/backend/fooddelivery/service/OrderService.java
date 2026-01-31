@@ -98,6 +98,7 @@ public class OrderService {
     /**
      * Get order by ID
      */
+    @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
@@ -111,6 +112,7 @@ public class OrderService {
     /**
      * Get customer orders
      */
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getMyOrders(Pageable pageable) {
         String email = getCurrentUserEmail();
         User customer = userRepository.findByEmail(email)
@@ -123,6 +125,7 @@ public class OrderService {
     /**
      * Get restaurant orders
      */
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getRestaurantOrders(Long restaurantId, Pageable pageable) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
