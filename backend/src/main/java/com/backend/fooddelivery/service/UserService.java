@@ -7,6 +7,8 @@ import com.backend.fooddelivery.model.User;
 import com.backend.fooddelivery.repository.UserRepository;
 import com.backend.fooddelivery.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,7 @@ public class UserService {
     /**
      * Get user by ID
      */
+    @Cacheable(value = "users", key = "#id")
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -58,6 +61,7 @@ public class UserService {
      * Update user profile
      */
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -92,6 +96,7 @@ public class UserService {
      * Upload profile picture
      */
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponse uploadProfilePicture(MultipartFile file) {
         String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email)
@@ -114,6 +119,7 @@ public class UserService {
      * Soft delete user (Admin only)
      */
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));

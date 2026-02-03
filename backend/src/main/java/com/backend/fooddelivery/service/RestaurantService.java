@@ -11,6 +11,8 @@ import com.backend.fooddelivery.repository.RestaurantRepository;
 import com.backend.fooddelivery.repository.UserRepository;
 import com.backend.fooddelivery.util.RestaurantMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -48,6 +50,7 @@ public class RestaurantService {
     /**
      * Get restaurant by ID
      */
+    @Cacheable(value = "restaurants", key = "#id")
     public RestaurantResponse getRestaurantById(Long id) {
         Restaurant restaurant = restaurantRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
@@ -164,6 +167,7 @@ public class RestaurantService {
      * Update restaurant
      */
     @Transactional
+    @CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse updateRestaurant(Long id, UpdateRestaurantRequest request) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
@@ -204,6 +208,7 @@ public class RestaurantService {
      * Upload restaurant logo
      */
     @Transactional
+    @CacheEvict(value = "restaurants", key = "#id")
     public RestaurantResponse uploadLogo(Long id, MultipartFile file) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
@@ -228,6 +233,7 @@ public class RestaurantService {
      * Delete restaurant (Admin only) - Soft delete
      */
     @Transactional
+    @CacheEvict(value = "restaurants", key = "#id")
     public void deleteRestaurant(Long id) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));

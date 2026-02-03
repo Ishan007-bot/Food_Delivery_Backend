@@ -13,6 +13,8 @@ import com.backend.fooddelivery.repository.RestaurantRepository;
 import com.backend.fooddelivery.repository.UserRepository;
 import com.backend.fooddelivery.util.MenuItemMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -45,6 +47,7 @@ public class MenuItemService {
     /**
      * Get restaurant menu (all items)
      */
+    @Cacheable(value = "menuItems", key = "'restaurant:' + #restaurantId")
     public List<MenuItemResponse> getRestaurantMenu(Long restaurantId) {
         return menuItemRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
                 .map(MenuItemMapper::toMenuItemResponse)
@@ -63,6 +66,7 @@ public class MenuItemService {
     /**
      * Get menu item by ID
      */
+    @Cacheable(value = "menuItems", key = "#id")
     public MenuItemResponse getMenuItemById(Long id) {
         MenuItem menuItem = menuItemRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
@@ -128,6 +132,7 @@ public class MenuItemService {
      * Create menu item (Restaurant Owner)
      */
     @Transactional
+    @CacheEvict(value = "menuItems", key = "'restaurant:' + #restaurantId")
     public MenuItemResponse createMenuItem(Long restaurantId, CreateMenuItemRequest request) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
@@ -153,6 +158,7 @@ public class MenuItemService {
      * Update menu item
      */
     @Transactional
+    @CacheEvict(value = "menuItems", allEntries = true)
     public MenuItemResponse updateMenuItem(Long id, UpdateMenuItemRequest request) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
@@ -178,6 +184,7 @@ public class MenuItemService {
      * Upload menu item image
      */
     @Transactional
+    @CacheEvict(value = "menuItems", key = "#id")
     public MenuItemResponse uploadMenuItemImage(Long id, MultipartFile file) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
@@ -205,6 +212,7 @@ public class MenuItemService {
      * Toggle availability
      */
     @Transactional
+    @CacheEvict(value = "menuItems", allEntries = true)
     public MenuItemResponse toggleAvailability(Long id) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
@@ -224,6 +232,7 @@ public class MenuItemService {
      * Delete menu item (soft delete)
      */
     @Transactional
+    @CacheEvict(value = "menuItems", allEntries = true)
     public void deleteMenuItem(Long id) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
