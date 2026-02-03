@@ -199,13 +199,6 @@ Frontend runs on: `http://localhost:5173`
 - **Endpoint Protection**: Secured REST endpoints
 - **Rate Limiting**: Protection against abuse
 
-### Best Practices
-
-- No hardcoded credentials (environment variables)
-- CORS configuration
-- Input validation on all endpoints
-- Global exception handling
-- Secure file upload validation
 
 ---
 
