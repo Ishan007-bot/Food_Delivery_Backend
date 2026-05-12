@@ -9,9 +9,7 @@ import {
   Mail,
   Globe,
   Shield,
-  Zap,
   ChevronDown,
-  UtensilsCrossed
 } from 'lucide-react';
 import {
   Sidebar,
@@ -27,7 +25,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
@@ -35,23 +32,23 @@ import {
 } from '@/components/ui/collapsible';
 
 const mainNavItems = [
-  { title: 'Overview', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+  { title: 'Pass', url: '/dashboard', icon: LayoutDashboard, note: 'overview' },
+  { title: 'Service', url: '/dashboard/analytics', icon: BarChart3, note: 'analytics' },
 ];
 
 const adminNavItems = [
-  { title: 'Users', url: '/dashboard/users', icon: Users },
-  { title: 'Rate Limits', url: '/dashboard/rate-limits', icon: Shield },
+  { title: 'Guests', url: '/dashboard/users', icon: Users, note: 'users' },
+  { title: 'Throttle', url: '/dashboard/rate-limits', icon: Shield, note: 'rate-limits' },
 ];
 
 const dataNavItems = [
-  { title: 'Records', url: '/dashboard/records', icon: FileText },
-  { title: 'File Uploads', url: '/dashboard/files', icon: Upload },
+  { title: 'Ticket Book', url: '/dashboard/records', icon: FileText, note: 'records' },
+  { title: 'Mise en Place', url: '/dashboard/files', icon: Upload, note: 'uploads' },
 ];
 
 const integrationNavItems = [
-  { title: 'Email', url: '/dashboard/email', icon: Mail },
-  { title: 'External APIs', url: '/dashboard/integrations', icon: Globe },
+  { title: 'Couriers', url: '/dashboard/email', icon: Mail, note: 'email' },
+  { title: 'Suppliers', url: '/dashboard/integrations', icon: Globe, note: 'apis' },
 ];
 
 export function DashboardSidebar() {
@@ -63,12 +60,13 @@ export function DashboardSidebar() {
 
   const isActive = (url: string) => location.pathname === url;
 
-  const NavItem = ({ item }: { item: { title: string; url: string; icon: React.ComponentType<{ className?: string }> } }) => (
+  const NavItem = ({ item }: { item: typeof mainNavItems[number] }) => (
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
         isActive={isActive(item.url)}
         tooltip={isCollapsed ? item.title : undefined}
+        className="font-display text-base data-[active=true]:bg-sidebar-primary/15 data-[active=true]:text-sidebar-primary-foreground data-[active=true]:before:content-['•'] data-[active=true]:before:text-primary data-[active=true]:before:absolute data-[active=true]:before:-left-0 data-[active=true]:before:text-2xl relative"
       >
         <Link to={item.url}>
           <item.icon className="h-4 w-4" />
@@ -80,21 +78,27 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-            <UtensilsCrossed className="h-5 w-5 text-primary-foreground" />
-          </div>
+      <SidebarHeader className="border-b border-sidebar-border p-5">
+        <Link to="/dashboard" className="flex items-baseline gap-2">
+          <span className="text-primary font-display text-2xl leading-none">●</span>
           {!isCollapsed && (
-            <span className="font-bold text-lg">FoodDelivery</span>
+            <span className="font-display text-xl font-medium tracking-tight text-sidebar-foreground">
+              Food<span className="italic font-light">Mood</span>
+            </span>
           )}
         </Link>
+        {!isCollapsed && (
+          <div className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-sidebar-foreground/55 mt-2">
+            The Pass · Vol. I
+          </div>
+        )}
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* Main Navigation */}
+      <SidebarContent className="px-1">
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel className="font-mono text-[0.6rem] uppercase tracking-[0.22em] text-sidebar-foreground/55">
+            § Service
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
@@ -104,14 +108,13 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Admin Section */}
         {isAdmin && (
           <SidebarGroup>
             <Collapsible defaultOpen className="group/collapsible">
               <SidebarGroupLabel asChild>
-                <CollapsibleTrigger className="flex w-full items-center justify-between">
-                  Admin
-                  <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                <CollapsibleTrigger className="flex w-full items-center justify-between font-mono text-[0.6rem] uppercase tracking-[0.22em] text-sidebar-foreground/55">
+                  § The Kitchen
+                  <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
               <CollapsibleContent>
@@ -127,13 +130,12 @@ export function DashboardSidebar() {
           </SidebarGroup>
         )}
 
-        {/* Data Management */}
         <SidebarGroup>
           <Collapsible defaultOpen className="group/collapsible">
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                Data
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              <CollapsibleTrigger className="flex w-full items-center justify-between font-mono text-[0.6rem] uppercase tracking-[0.22em] text-sidebar-foreground/55">
+                § Tickets
+                <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
@@ -148,13 +150,12 @@ export function DashboardSidebar() {
           </Collapsible>
         </SidebarGroup>
 
-        {/* Integrations */}
         <SidebarGroup>
           <Collapsible defaultOpen className="group/collapsible">
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                Integrations
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              <CollapsibleTrigger className="flex w-full items-center justify-between font-mono text-[0.6rem] uppercase tracking-[0.22em] text-sidebar-foreground/55">
+                § The Pass-Out
+                <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
@@ -170,10 +171,10 @@ export function DashboardSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={isCollapsed ? 'Settings' : undefined}>
+            <SidebarMenuButton asChild tooltip={isCollapsed ? 'Settings' : undefined} className="font-display text-base">
               <Link to="/dashboard/settings">
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
@@ -181,6 +182,11 @@ export function DashboardSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {!isCollapsed && (
+          <div className="mt-3 px-2 py-2 border-t border-sidebar-border/60 font-mono text-[0.55rem] uppercase tracking-[0.2em] text-sidebar-foreground/45">
+            Folio {Math.floor(Math.random() * 90 + 10)} · {new Date().toLocaleDateString('en-GB')}
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

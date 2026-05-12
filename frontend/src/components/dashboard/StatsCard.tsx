@@ -19,30 +19,31 @@ interface StatsCardProps {
 export function StatsCard({ stat, index }: StatsCardProps) {
   const Icon = stat.icon;
   const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
-  
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      transition={{ delay: index * 0.08, duration: 0.5 }}
     >
-      <Card variant={stat.trend === 'up' ? 'stat' : 'warning'} className="overflow-hidden">
+      <Card variant={stat.trend === 'up' ? 'stat' : 'warning'} className="overflow-hidden hover:-translate-y-0.5 transition-transform duration-300">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-foreground/55">{stat.title}</p>
+              <h3 className="font-display text-4xl mt-2 leading-none">{stat.value}</h3>
+              <div className={cn(
+                "flex items-center gap-1.5 text-xs font-medium mt-3 font-mono tracking-wider uppercase",
+                stat.trend === 'up' ? 'text-success' : 'text-warning'
+              )}>
+                <TrendIcon className="h-3.5 w-3.5" />
+                {stat.change}
+                <span className="text-foreground/40 ml-1 normal-case font-sans">vs last week</span>
+              </div>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Icon className="h-5 w-5 text-primary" />
             </div>
-            <div className={cn(
-              "flex items-center gap-1 text-sm font-medium",
-              stat.trend === 'up' ? 'text-success' : 'text-warning'
-            )}>
-              <TrendIcon className="h-4 w-4" />
-              {stat.change}
-            </div>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-bold">{stat.value}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
           </div>
         </CardContent>
       </Card>
